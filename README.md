@@ -14,8 +14,9 @@ A API implementa as operações CRUD (Create, Read, Update, Delete) para receita
 ## 🚀 Tecnologias Utilizadas
 
 - **Python 3.11**
-- **Flask**: Framework web para Python
-- **Flask-RESTful**: Extensão para criação de APIs REST
+- **FastAPI**: Framework web moderno e rápido para construir APIs com Python
+- **Uvicorn**: Servidor ASGI para rodar aplicações FastAPI
+- **Pydantic**: Para validação de dados e serialização
 
 ## 📦 Estrutura do Projeto
 
@@ -38,7 +39,7 @@ backend_crud_api/
 1. **Clone o repositório**:
    ```bash
    git clone <url-do-repositorio>
-   cd backend_crud_api
+   cd Projeto-BackEnd-C.R.U.D
    ```
 
 2. **Instale as dependências**:
@@ -48,10 +49,12 @@ backend_crud_api/
 
 3. **Execute a aplicação**:
    ```bash
-   python app.py
+   uvicorn app:app --reload
    ```
 
-4. **A API estará disponível em**: `http://localhost:5000`
+4. **A API estará disponível em**: `http://127.0.0.1:8000`
+
+   Você pode acessar a documentação interativa da API (Swagger UI) em `http://127.0.0.1:8000/docs`.
 
 ## 📚 Documentação da API
 
@@ -72,7 +75,7 @@ Cada receita possui os seguintes campos:
 
 #### 1. Criar Receita
 - **Método**: `POST`
-- **URL**: `/recipes`
+- **URL**: `/recipes/`
 - **Body**:
   ```json
   {
@@ -89,17 +92,17 @@ Cada receita possui os seguintes campos:
 
 #### 2. Listar Todas as Receitas
 - **Método**: `GET`
-- **URL**: `/recipes`
+- **URL**: `/recipes/`
 - **Resposta**: Array com todas as receitas
 
 #### 3. Buscar Receita por ID
 - **Método**: `GET`
-- **URL**: `/recipes/{id}`
+- **URL**: `/recipes/{recipe_id}`
 - **Resposta**: Dados da receita específica
 
 #### 4. Atualizar Receita
 - **Método**: `PUT`
-- **URL**: `/recipes/{id}`
+- **URL**: `/recipes/{recipe_id}`
 - **Body**: Campos que deseja atualizar
 - **Validações**:
   - Nome deve ter entre 2 e 50 caracteres (se fornecido)
@@ -109,7 +112,7 @@ Cada receita possui os seguintes campos:
 
 #### 5. Deletar Receita
 - **Método**: `DELETE`
-- **URL**: `/recipes/{id}`
+- **URL**: `/recipes/{recipe_id}`
 - **Resposta**: Confirmação da exclusão com dados da receita deletada
 
 ## 🧪 Testando a API
@@ -124,9 +127,10 @@ python test_api.py
 
 #### Criar uma receita:
 ```bash
-curl -X POST http://localhost:5000/recipes \
+curl -X POST http://127.0.0.1:8000/recipes/ \
   -H "Content-Type: application/json" \
-  -d '{
+  -d 
+  '{
     "nome": "Brigadeiro",
     "ingredientes": ["leite condensado", "chocolate em pó", "manteiga"],
     "modo_de_preparo": "Misture tudo e cozinhe até engrossar"
@@ -135,19 +139,20 @@ curl -X POST http://localhost:5000/recipes \
 
 #### Listar receitas:
 ```bash
-curl http://localhost:5000/recipes
+curl http://127.0.0.1:8000/recipes/
 ```
 
 #### Buscar por ID:
 ```bash
-curl http://localhost:5000/recipes/1
+curl http://127.0.0.1:8000/recipes/1
 ```
 
 #### Atualizar receita:
 ```bash
-curl -X PUT http://localhost:5000/recipes/1 \
+curl -X PUT http://127.0.0.1:8000/recipes/1 \
   -H "Content-Type: application/json" \
-  -d '{
+  -d 
+  '{
     "nome": "Brigadeiro Gourmet",
     "ingredientes": ["leite condensado", "chocolate belga", "manteiga", "granulado"]
   }'
@@ -155,7 +160,7 @@ curl -X PUT http://localhost:5000/recipes/1 \
 
 #### Deletar receita:
 ```bash
-curl -X DELETE http://localhost:5000/recipes/1
+curl -X DELETE http://127.0.0.1:8000/recipes/1
 ```
 
 ## ✅ Requisitos Implementados

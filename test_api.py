@@ -1,7 +1,7 @@
 import requests
 import json
 
-BASE_URL = 'http://localhost:5000'
+BASE_URL = 'http://127.0.0.1:8000'
 
 def test_create_recipe():
     """Testa a criação de uma receita"""
@@ -11,16 +11,16 @@ def test_create_recipe():
         'modo_de_preparo': 'Misture todos os ingredientes e asse por 30 minutos'
     }
     
-    response = requests.post(f'{BASE_URL}/recipes', json=recipe_data)
-    print(f"POST /recipes - Status: {response.status_code}")
+    response = requests.post(f'{BASE_URL}/recipes/', json=recipe_data)
+    print(f"POST /recipes/ - Status: {response.status_code}")
     print(f"Response: {response.json()}")
     print("-" * 50)
     return response.json()
 
 def test_get_all_recipes():
     """Testa a listagem de todas as receitas"""
-    response = requests.get(f'{BASE_URL}/recipes')
-    print(f"GET /recipes - Status: {response.status_code}")
+    response = requests.get(f'{BASE_URL}/recipes/')
+    print(f"GET /recipes/ - Status: {response.status_code}")
     print(f"Response: {response.json()}")
     print("-" * 50)
 
@@ -61,7 +61,7 @@ def test_validation_errors():
         'ingredientes': ['farinha'],
         'modo_de_preparo': 'Teste'
     }
-    response = requests.post(f'{BASE_URL}/recipes', json=invalid_recipe)
+    response = requests.post(f'{BASE_URL}/recipes/', json=invalid_recipe)
     print(f"Nome muito curto - Status: {response.status_code}, Response: {response.json()}")
     
     # Nome muito longo
@@ -70,7 +70,7 @@ def test_validation_errors():
         'ingredientes': ['farinha'],
         'modo_de_preparo': 'Teste'
     }
-    response = requests.post(f'{BASE_URL}/recipes', json=invalid_recipe)
+    response = requests.post(f'{BASE_URL}/recipes/', json=invalid_recipe)
     print(f"Nome muito longo - Status: {response.status_code}, Response: {response.json()}")
     
     # Muitos ingredientes
@@ -79,8 +79,15 @@ def test_validation_errors():
         'ingredientes': ['ingrediente'] * 21,
         'modo_de_preparo': 'Teste'
     }
-    response = requests.post(f'{BASE_URL}/recipes', json=invalid_recipe)
+    response = requests.post(f'{BASE_URL}/recipes/', json=invalid_recipe)
     print(f"Muitos ingredientes - Status: {response.status_code}, Response: {response.json()}")
+    
+    # Nome vazio na atualização
+    update_empty_name = {
+        'nome': ''
+    }
+    response = requests.put(f'{BASE_URL}/recipes/1', json=update_empty_name)
+    print(f"Nome vazio na atualização - Status: {response.status_code}, Response: {response.json()}")
     print("-" * 50)
 
 if __name__ == '__main__':

@@ -1,96 +1,81 @@
 
-from flask import Flask, request
-from flask_restful import Resource, Api
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+from typing import List, Optional
 
-app = Flask(__name__)
-api = Api(app)
+app = FastAPI()
 
-recipes = []
+class RecipeCreate(BaseModel):
+    nome: str = Field(..., min_length=2, max_length=50)
+    ingredientes: List[str] = Field(..., min_items=1, max_items=20)
+    modo_de_preparo: str
+
+class RecipeUpdate(BaseModel):
+    nome: Optional[str] = Field(None, min_length=2, max_length=50)
+    ingredientes: Optional[List[str]] = Field(None, min_items=1, max_items=20)
+    modo_de_preparo: Optional[str] = None
+
+class RecipeInDB(RecipeCreate):
+    id: int
+
+recipes_db: List[RecipeInDB] = []
 recipe_id_counter = 1
 
-class Recipe(Resource):
-    def get(self, recipe_id=None):
-        if recipe_id:
-            recipe = next((r for r in recipes if r['id'] == recipe_id), None)
-            if recipe:
-                return recipe, 200
-            return {'message': 'Receita não encontrada'}, 404
-        return recipes, 200
+@app.post("/recipes/", response_model=RecipeInDB, status_code=201)
+async def create_recipe(recipe: RecipeCreate):
+    global recipe_id_counter
 
-    def post(self):
-        global recipe_id_counter
-        data = request.get_json()
+    if any(r.nome.lower() == recipe.nome.lower() for r in recipes_db):
+        raise HTTPException(status_code=400, detail="Já existe uma receita com este nome")
 
-        name = data.get('nome')
-        ingredients = data.get('ingredientes')
-        preparation_method = data.get('modo_de_preparo')
+    new_recipe = RecipeInDB(id=recipe_id_counter, **recipe.dict())
+    recipes_db.append(new_recipe)
+    recipe_id_counter += 1
+    return new_recipe
 
-        if not name or not ingredients or not preparation_method:
-            return {'message': 'Nome, ingredientes e modo de preparo são obrigatórios'}, 400
+@app.get("/recipes/", response_model=List[RecipeInDB])
+async def get_all_recipes():
+    return recipes_db
 
-        if not (2 <= len(name) <= 50):
-            return {'message': 'O nome da receita deve ter entre 2 e 50 caracteres'}, 400
+@app.get("/recipes/{recipe_id}", response_model=RecipeInDB)
+async def get_recipe_by_id(recipe_id: int):
+    recipe = next((r for r in recipes_db if r.id == recipe_id), None)
+    if recipe:
+        return recipe
+    raise HTTPException(status_code=404, detail="Receita não encontrada")
 
-        if not (1 <= len(ingredients) <= 20):
-            return {'message': 'A receita deve ter entre 1 e 20 ingredientes'}, 400
+@app.put("/recipes/{recipe_id}", response_model=RecipeInDB)
+async def update_recipe(recipe_id: int, recipe_update: RecipeUpdate):
+    recipe_index = next((i for i, r in enumerate(recipes_db) if r.id == recipe_id), None)
 
-        if any(r['nome'].lower() == name.lower() for r in recipes):
-            return {'message': 'Já existe uma receita com este nome'}, 400
+    if recipe_index is None:
+        raise HTTPException(status_code=404, detail="Receita não encontrada")
 
-        recipe = {
-            'id': recipe_id_counter,
-            'nome': name,
-            'ingredientes': ingredients,
-            'modo_de_preparo': preparation_method
-        }
-        recipes.append(recipe)
-        recipe_id_counter += 1
-        return recipe, 201
+    current_recipe = recipes_db[recipe_index]
+    update_data = recipe_update.dict(exclude_unset=True)
 
-    def put(self, recipe_id):
-        data = request.get_json()
-        recipe = next((r for r in recipes if r['id'] == recipe_id), None)
+    if "nome" in update_data:
+        if update_data["nome"].strip() == "":
+            raise HTTPException(status_code=400, detail="O nome da receita não pode ser vazio")
+        if any(r.nome.lower() == update_data["nome"].lower() and r.id != recipe_id for r in recipes_db):
+            raise HTTPException(status_code=400, detail="Já existe outra receita com este nome")
 
-        if not recipe:
-            return {'message': 'Receita não encontrada'}, 404
+    for key, value in update_data.items():
+        setattr(current_recipe, key, value)
 
-        new_name = data.get('nome')
-        new_ingredients = data.get('ingredientes')
-        new_preparation_method = data.get('modo_de_preparo')
+    return current_recipe
 
-        if new_name is not None:
-            if not (2 <= len(new_name) <= 50):
-                return {'message': 'O nome da receita deve ter entre 2 e 50 caracteres'}, 400
-            if new_name.strip() == '':
-                return {'message': 'O nome da receita não pode ser vazio'}, 400
-            if any(r['nome'].lower() == new_name.lower() and r['id'] != recipe_id for r in recipes):
-                return {'message': 'Já existe outra receita com este nome'}, 400
-            recipe['nome'] = new_name
+@app.delete("/recipes/{recipe_id}", status_code=200)
+async def delete_recipe(recipe_id: int):
+    global recipes_db
+    if not recipes_db:
+        raise HTTPException(status_code=400, detail="A lista de receitas está vazia")
 
-        if new_ingredients is not None:
-            if not (1 <= len(new_ingredients) <= 20):
-                return {'message': 'A receita deve ter entre 1 e 20 ingredientes'}, 400
-            recipe['ingredientes'] = new_ingredients
+    recipe_index = next((i for i, r in enumerate(recipes_db) if r.id == recipe_id), None)
 
-        if new_preparation_method is not None:
-            recipe['modo_de_preparo'] = new_preparation_method
+    if recipe_index is None:
+        raise HTTPException(status_code=404, detail="Receita não encontrada")
 
-        return recipe, 200
-
-    def delete(self, recipe_id):
-        global recipes
-        if not recipes:
-            return {'message': 'A lista de receitas está vazia'}, 400
-
-        recipe = next((r for r in recipes if r['id'] == recipe_id), None)
-        if not recipe:
-            return {'message': 'Receita não encontrada'}, 404
-
-        recipes = [r for r in recipes if r['id'] != recipe_id]
-        return {'message': 'Receita deletada', 'recipe': recipe}, 200
-
-api.add_resource(Recipe, '/recipes', '/recipes/<int:recipe_id>')
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    deleted_recipe = recipes_db.pop(recipe_index)
+    return {"message": "Receita deletada", "recipe": deleted_recipe}
 
