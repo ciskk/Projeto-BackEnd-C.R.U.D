@@ -183,7 +183,7 @@ curl -X DELETE http://localhost:5000/recipes/1
 5. **Tratamento de erros**: Mensagens descritivas para todos os casos de erro
 
 ## 👨‍💻 Autor
-
+Francisco Cândido Pereira Pontes.
 Projeto desenvolvido para a disciplina de Back End - Curso Técnico Integrado em Informática.
 
 ## 📄 Licença
