@@ -3,6 +3,8 @@ import json
 
 BASE_URL = 'http://127.0.0.1:8000'
 
+# --- TESTES DE RECEITAS (Seu código original) ---
+
 def test_create_recipe():
     """Testa a criação de uma receita"""
     recipe_data = {
@@ -53,7 +55,7 @@ def test_delete_recipe(recipe_id):
 
 def test_validation_errors():
     """Testa os casos de erro de validação"""
-    print("=== TESTANDO VALIDAÇÕES ===")
+    print("=== TESTANDO VALIDAÇÕES DE RECEITAS ===")
     
     # Nome muito curto
     invalid_recipe = {
@@ -90,8 +92,117 @@ def test_validation_errors():
     print(f"Nome vazio na atualização - Status: {response.status_code}, Response: {response.json()}")
     print("-" * 50)
 
+# --- TESTES DE USUÁRIOS (Novos) ---
+
+def test_create_usuario():
+    """Testa a criação de um usuário válido"""
+    user_data = {
+        'nome_usuario': 'ana_dev',
+        'email': 'ana@dev.com',
+        'senha': 'senhaCom1Numero'
+    }
+    response = requests.post(f'{BASE_URL}/usuarios', json=user_data)
+    print(f"POST /usuarios - Status: {response.status_code}")
+    print(f"Response: {response.json()}")
+    print("-" * 50)
+    assert response.status_code == 201
+    assert response.json()['email'] == 'ana@dev.com'
+    assert 'senha' not in response.json() # Confirma que é UsuarioPublic
+    return response.json()
+
+def test_create_usuario_email_duplicado():
+    """Testa criar usuário com email que já existe"""
+    user_data = {
+        'nome_usuario': 'ana_duplicada',
+        'email': 'ana@dev.com', # Email do teste anterior
+        'senha': 'outraSenha123'
+    }
+    response = requests.post(f'{BASE_URL}/usuarios', json=user_data)
+    print(f"POST /usuarios (Email duplicado) - Status: {response.status_code}")
+    print(f"Response: {response.json()}")
+    print("-" * 50)
+    assert response.status_code == 400
+
+def test_create_usuario_senha_invalida():
+    """Testa criar usuário com senha inválida (sem número)"""
+    user_data = {
+        'nome_usuario': 'bruno_dev',
+        'email': 'bruno@dev.com',
+        'senha': 'senhasemnumero'
+    }
+    response = requests.post(f'{BASE_URL}/usuarios', json=user_data)
+    print(f"POST /usuarios (Senha inválida/sem número) - Status: {response.status_code}")
+    print(f"Response: {response.json()}")
+    print("-" * 50)
+    assert response.status_code == 400
+    
+    user_data['senha'] = 'semletra12345'
+    response = requests.post(f'{BASE_URL}/usuarios', json=user_data)
+    print(f"POST /usuarios (Senha inválida/sem letra) - Status: {response.status_code}")
+    print(f"Response: {response.json()}")
+    print("-" * 50)
+    assert response.status_code == 400
+
+def test_get_todos_usuarios():
+    """Testa a listagem de todos os usuários"""
+    response = requests.get(f'{BASE_URL}/usuarios/')
+    print(f"GET /usuarios/ - Status: {response.status_code}")
+    print(f"Response: {response.json()}")
+    print("-" * 50)
+
+def test_get_usuario_por_id(user_id):
+    """Testa a busca de usuário por ID"""
+    response = requests.get(f'{BASE_URL}/usuarios/id/{user_id}')
+    print(f"GET /usuarios/id/{user_id} - Status: {response.status_code}")
+    print(f"Response: {response.json()}")
+    print("-" * 50)
+
+def test_get_usuario_por_nome(nome_usuario):
+    """Testa a busca de usuário por nome_usuario"""
+    response = requests.get(f'{BASE_URL}/usuarios/{nome_usuario}')
+    print(f"GET /usuarios/{nome_usuario} - Status: {response.status_code}")
+    print(f"Response: {response.json()}")
+    print("-" * 50)
+
+def test_update_usuario(user_id):
+    """Testa a atualização de um usuário"""
+    update_data = {
+        'nome_usuario': 'ana_dev_atualizada',
+        'email': 'ana_nova@dev.com',
+        'senha': 'novaSenha123'
+    }
+    response = requests.put(f'{BASE_URL}/usuarios/{user_id}', json=update_data)
+    print(f"PUT /usuarios/{user_id} - Status: {response.status_code}")
+    print(f"Response: {response.json()}")
+    print("-" * 50)
+    assert response.status_code == 200
+    assert response.json()['email'] == 'ana_nova@dev.com'
+
+def test_update_usuario_senha_invalida(user_id):
+    """Testa a atualização de um usuário com senha inválida"""
+    update_data = {
+        'nome_usuario': 'ana_dev_atualizada_fail',
+        'email': 'ana_nova_fail@dev.com',
+        'senha': 'senhasemnumero'
+    }
+    response = requests.put(f'{BASE_URL}/usuarios/{user_id}', json=update_data)
+    print(f"PUT /usuarios/{user_id} (Senha inválida) - Status: {response.status_code}")
+    print(f"Response: {response.json()}")
+    print("-" * 50)
+    assert response.status_code == 400
+
+def test_delete_usuario(user_id):
+    """Testa a exclusão de um usuário"""
+    response = requests.delete(f'{BASE_URL}/usuarios/{user_id}')
+    print(f"DELETE /usuarios/{user_id} - Status: {response.status_code}")
+    print(f"Response: {response.json()}")
+    print("-" * 50)
+    assert response.status_code == 200
+
+# --- Bloco Principal de Execução de Testes ---
+
 if __name__ == '__main__':
-    print("=== INICIANDO TESTES DA API ===")
+    print("=== INICIANDO TESTES DA API (RECEITAS) ===")
     
     # Criar uma receita
     created_recipe = test_create_recipe()
@@ -100,23 +211,41 @@ if __name__ == '__main__':
     # Listar todas as receitas
     test_get_all_recipes()
     
-    # Buscar receita por ID
+    # Testar GET, PUT, DELETE da receita criada
     if recipe_id:
         test_get_recipe_by_id(recipe_id)
-        
-        # Atualizar receita
         test_update_recipe(recipe_id)
-        
-        # Listar novamente para ver a atualização
-        test_get_all_recipes()
-        
-        # Deletar receita
+        test_get_all_recipes() # Listar novamente para ver a atualização
         test_delete_recipe(recipe_id)
-        
-        # Listar novamente para confirmar exclusão
-        test_get_all_recipes()
+        test_get_all_recipes() # Listar novamente para confirmar exclusão
     
-    # Testar validações
+    # Testar validações de receita
     test_validation_errors()
     
-    print("=== TESTES CONCLUÍDOS ===")
+    print("\n" + "=" * 20)
+    print("=== INICIANDO TESTES DA API (USUÁRIOS) ===")
+    print("=" * 20 + "\n")
+    
+    # Criar um usuário
+    created_user = test_create_usuario()
+    user_id = created_user.get('id')
+    user_nome = created_user.get('nome_usuario')
+    
+    # Testar validações de usuário
+    test_create_usuario_email_duplicado()
+    test_create_usuario_senha_invalida()
+    
+    # Listar todos os usuários
+    test_get_todos_usuarios()
+    
+    # Testar GET, PUT, DELETE do usuário criado
+    if user_id:
+        test_get_usuario_por_id(user_id)
+        test_get_usuario_por_nome(user_nome)
+        test_update_usuario(user_id)
+        test_update_usuario_senha_invalida(user_id) # Testar falha de update
+        test_get_all_recipes() # Listar novamente para ver a atualização
+        test_delete_usuario(user_id)
+        test_get_todos_usuarios() # Listar novamente para confirmar exclusão
+    
+    print("\n=== TESTES CONCLUÍDOS ===")
