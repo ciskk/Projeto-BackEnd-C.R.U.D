@@ -5,7 +5,7 @@ from http import HTTPStatus # Importa HTTPStatus conforme o PDF
 
 app = FastAPI()
 
-# --- Modelos de Receita (Existentes) ---
+# Modelos de Receita 
 class RecipeCreate(BaseModel):
     nome: str = Field(..., min_length=2, max_length=50)
     ingredientes: List[str] = Field(..., min_items=1, max_items=20)
@@ -19,7 +19,6 @@ class RecipeUpdate(BaseModel):
 class RecipeInDB(RecipeCreate):
     id: int
 
-# --- Modelos de Usuário (Novos) ---
 class BaseUsuario(BaseModel):
     nome_usuario: str = Field(..., min_length=3, max_length=50)
     email: str
@@ -33,14 +32,14 @@ class UsuarioPublic(BaseModel):
     nome_usuario: str
     email: str
 
-# --- Banco de Dados em Memória ---
+# Banco de Dados em Memória
 recipes_db: List[RecipeInDB] = []
 recipe_id_counter = 1
 
-usuarios_db: List[Usuario] = [] # Novo banco de dados para usuários
-user_id_counter = 1 # Novo contador para IDs de usuário
+usuarios_db: List[Usuario] = [] # novo banco de dados para usuários
+user_id_counter = 1 # novo contador para IDs de usuário
 
-# --- Helper: Validação de Senha (Desafio Extra) ---
+# validação de Senha
 def is_senha_valida(senha: str) -> bool:
     """Verifica se a senha contém pelo menos uma letra e um número."""
     tem_letra = any(c.isalpha() for c in senha)
@@ -127,7 +126,7 @@ async def create_usuario(dados: BaseUsuario):
             detail="Email já cadastrado."
         )
     
-    # Desafio Extra: Validação de senha
+    # Validação de senha
     if not is_senha_valida(dados.senha):
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
@@ -183,14 +182,14 @@ async def update_usuario(id: int, dados: BaseUsuario):
             detail="Usuário não encontrado."
         )
     
-    # Desafio Extra: Validação de senha
+    # Validação de senha
     if not is_senha_valida(dados.senha):
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
             detail="A senha deve conter pelo menos uma letra e um número."
         )
     
-    # Validação de email duplicado (exceto ele mesmo)
+    # validação de email duplicado (exceto ele mesmo)
     if any(u.email.lower() == dados.email.lower() and u.id != id for u in usuarios_db):
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
@@ -213,6 +212,6 @@ async def delete_usuario(id: int):
         )
 
     deleted_usuario = usuarios_db.pop(usuario_index)
-    # Retorna o usuário deletado (como UsuarioPublic) conforme o PDF
+    # retorna o usuário deletado
     return deleted_usuario
 

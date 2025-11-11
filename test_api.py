@@ -3,7 +3,6 @@ import json
 
 BASE_URL = 'http://127.0.0.1:8000'
 
-# --- TESTES DE RECEITAS (Seu código original) ---
 
 def test_create_recipe():
     """Testa a criação de uma receita"""
@@ -199,7 +198,7 @@ def test_delete_usuario(user_id):
     print("-" * 50)
     assert response.status_code == 200
 
-# --- Bloco Principal de Execução de Testes ---
+# Bloco Principal de Execução de Testes 
 
 if __name__ == '__main__':
     print("=== INICIANDO TESTES DA API (RECEITAS) ===")
