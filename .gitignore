@@ -8,3 +8,4 @@ pycache/
 *.pyc
 .venv/
 venv/
+database.db
