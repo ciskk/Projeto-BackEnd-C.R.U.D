@@ -12,14 +12,14 @@ from schema import UsuarioPublic, BaseUsuario, Usuario
 
 app = FastAPI(title='API de Receitas e Usuarios')
 
-# --- Funcao Auxiliar (Regra de Negocio) ---
+#Funcao Auxiliar
 def senha_eh_forte(senha: str) -> bool:
     # Verifica se tem letras E numeros
     tem_letra = any(c.isalpha() for c in senha)
     tem_numero = any(c.isdigit() for c in senha)
     return tem_letra and tem_numero
 
-# --- ROTAS DE USUÁRIOS ---
+#ROTAS DE USUÁRIOS
 
 @app.post("/usuarios", status_code=HTTPStatus.CREATED, response_model=UsuarioPublic)
 def create_usuario(user: BaseUsuario, session: Session = Depends(get_session)):
