@@ -23,14 +23,14 @@ def senha_eh_forte(senha: str) -> bool:
 
 @app.post("/usuarios", status_code=HTTPStatus.CREATED, response_model=UsuarioPublic)
 def create_usuario(user: BaseUsuario, session: Session = Depends(get_session)):
-    # 1. Valida senha (Desafio Extra)
+    # Valida senha
     if not senha_eh_forte(user.password):
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
             detail='A senha precisa ter letras e numeros'
         )
 
-    # 2. Verifica duplicados
+    # Verifica duplicados
     db_user = session.scalar(
         select(User).where(
             (User.username == user.username) | (User.email == user.email)
@@ -43,7 +43,7 @@ def create_usuario(user: BaseUsuario, session: Session = Depends(get_session)):
         elif db_user.email == user.email:
             raise HTTPException(status_code=409, detail='Email ja existe')
 
-    # 3. Cria no banco
+    # Cria no banco
     novo_usuario = User(
         username=user.username,
         email=user.email,
